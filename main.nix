@@ -314,9 +314,9 @@ in
         "/home/media/homelab/admin-panel/package.json"
         "/home/media/homelab/admin-panel/bun.lock"
       ];
+      TriggerLimitIntervalSec = "10s"; # Prevent rapid-fire rebuilds
+      TriggerLimitBurst = 1;
     };
-    TriggerLimitIntervalSec = "10s"; # Prevent rapid-fire rebuilds
-    TriggerLimitBurst = 1;
   };
 
   systemd.services.admin-panel = {
