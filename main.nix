@@ -277,6 +277,7 @@ in
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
       Type = "oneshot";
+      PermissionsStartOnly = true;
       User = "media";
       WorkingDirectory = "/home/media/homelab/admin-panel";
       ExecStart = "${pkgs.bun}/bin/bun run ci-build";
