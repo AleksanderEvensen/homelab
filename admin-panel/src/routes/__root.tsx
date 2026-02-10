@@ -2,13 +2,13 @@ import { HeadContent, Scripts, createRootRouteWithContext } from "@tanstack/reac
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 
-import Header from "../components/Header";
-
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 
 import appCss from "../styles.css?url";
+import { ThemeProvider, useTheme } from "../components/theme-provider";
 
 import type { QueryClient } from "@tanstack/react-query";
+import { getCookie } from "@/lib/cookies";
 
 interface MyRouterContext {
   queryClient: QueryClient;
@@ -25,7 +25,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "TanStack Start Starter",
+        title: "NixOS Admin Panel",
       },
     ],
     links: [
@@ -35,18 +35,33 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
     ],
   }),
+  loader() {
+    return {
+      theme: getCookie("theme") === "dark" ? "dark" : "light",
+    } as const;
+  },
 
-  shellComponent: RootDocument,
+  shellComponent: RootProvider,
 });
 
-function RootDocument({ children }: { children: React.ReactNode }) {
+function RootProvider({ children }: { children: React.ReactNode }) {
+  const { theme } = Route.useLoaderData();
   return (
-    <html lang="en">
+    <ThemeProvider initialTheme={theme}>
+      <RootDocument>{children}</RootDocument>
+    </ThemeProvider>
+  );
+}
+
+function RootDocument({ children }: { children: React.ReactNode }) {
+  const { theme } = useTheme();
+
+  return (
+    <html lang="en" className={theme === "dark" ? "dark" : undefined}>
       <head>
         <HeadContent />
       </head>
       <body>
-        <Header />
         {children}
         <TanStackDevtools
           config={{

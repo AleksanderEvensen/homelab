@@ -1,9 +1,14 @@
 import { createEnv } from "@t3-oss/env-core";
+import { config } from "dotenv";
 import { z } from "zod";
+
+config({ path: [".env.local", ".env"] });
 
 export const env = createEnv({
   server: {
     SERVER_URL: z.string().url().optional(),
+    HOMELAB_REPO_PATH: z.string().default("/home/media/homelab"),
+    DATABASE_URL: z.string().default("file:./db.sqlite"),
   },
 
   /**
@@ -20,7 +25,7 @@ export const env = createEnv({
    * What object holds the environment variables at runtime. This is usually
    * `process.env` or `import.meta.env`.
    */
-  runtimeEnv: import.meta.env,
+  runtimeEnv: { ...process.env, ...import.meta.env },
 
   /**
    * By default, this library will feed the environment variables directly to

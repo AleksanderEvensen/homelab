@@ -38,7 +38,7 @@
   "globals": {},
   "ignorePatterns": [
     "node_modules/**/*",
-    "dist/**/*",
+    ".output/**/*",
     "src/routeTree.gen.ts",
     "bun.lock",
     ".agents/**/*",
