@@ -1,0 +1,252 @@
+{ config, pkgs, lib, ... }:
+
+{
+  imports = [
+    # ./caddy.nix
+    # ./jelly-fin.nix
+    # ./copyparty.nix
+    # ./vscode-server.nix
+    (fetchTarball "https://github.com/nix-community/nixos-vscode-server/tarball/master")
+  ];
+
+  programs.nix-ld.enable = true;
+  programs.nix-ld.libraries = with pkgs; [
+    stdenv.cc.cc
+    zlib
+    openssl
+  ];
+
+  environment.systemPackages = with pkgs; [
+    wget
+    neovim
+    git
+    gh
+    uv
+
+    jellyfin
+    jellyfin-web
+    jellyfin-ffmpeg
+
+    gcc
+    libgcc
+    gnumake
+
+    unzip
+    exiftool
+
+    wireguard-tools
+
+    zellij
+
+  ];
+
+  users.mutableUsers = false;
+
+  users.users.root = {
+    isSystemUser = true;
+    hashedPasswordFile = "/etc/password-files/media-user.pwd";
+  };
+
+  users.users.media = {
+    isNormalUser = true;
+    description = "media";
+    extraGroups = [ "wheel" "networkmanager" "video" "render" ];
+    hashedPasswordFile = "/etc/password-files/media-user.pwd";
+
+    openssh = {
+      authorizedKeys.keys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPILB1e574eEu9S0gC3BF5bPl2ILUIRo56YxFsBQGGDq ahse03@gmail.com"
+      ];
+    };
+  };
+
+  networking = {
+    networkmanager.enable = true;
+    hostName = "mediabox";
+    
+    firewall = {
+      allowedTCPPorts = [ 80 443 22 445 ];
+      allowedUDPPorts = [ 443 5353 ];
+      trustedInterfaces = [ "wg0" ];
+
+    };
+
+    wireguard.interfaces.wg0 = {
+      ips = [ "10.100.0.2/24" ];
+
+      privateKeyFile = "/etc/wireguard/private.key";
+
+      peers = [
+        {
+          publicKey = "HhQuvJiUmoL2Oz939m51R80Zah2ua6KNHfm/j0VxOxg=";
+	  endpoint = "147.93.127.164:51820";
+	  allowedIPs = [ "10.100.0.1/32" ];
+
+	  persistentKeepalive = 25;
+        }
+      ];
+    };
+  };
+
+
+  services.openssh.enable = true;
+
+  services.vscode-server.enable = true;
+
+  services.openssh.settings = {
+    PasswordAuthentication = true;
+    AllowUsers = [ "root" "media" ];
+    PermitRootLogin = "yes";
+  };
+
+  # enable .local domain
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    publish = {
+	enable = true;
+	addresses = true;
+	workstation = true;
+    };
+  };
+
+  # enable network NAS
+  services.samba = {
+    enable = true;
+    openFirewall = false;
+
+    settings = {
+      global = {
+        "workgroup" = "WORKGROUP";
+        "server string" = "mediabox";
+        "security" = "user";
+
+        "server min protocol" = "SMB2";
+        "server max protocol" = "SMB3";
+
+        "use sendfile" = "yes";
+        "aio read size" = "1";
+        "aio write size" = "1";
+
+        "disable netbios" = "yes";
+        "smb ports" = "445";
+      };
+
+      "media" = {
+        path = "/home/media";
+        browseable = "yes";
+        writeable = "yes";
+
+        "valid users" = "media";
+        "force user" = "media";
+        "force group" = "users";
+
+        "create mask" = "0664";
+        "directory mask" = "0775";
+
+      };
+    };
+  };
+
+
+  services.caddy = {
+    enable = true;
+    globalConfig = ''
+      servers {
+        protocols h1 h2 h3
+      }
+    '';
+
+    virtualHosts."server.ahse.no" = {
+      extraConfig = ''
+        reverse_proxy localhost:8096
+
+        header {
+          Strict-Transport-Security "max-age=31536000; IncludeSubDomains"
+        }
+      '';
+    };
+    virtualHosts."cp.ahse.no" = {
+      extraConfig = ''
+        request_body {
+          max_size 1024MB
+        }
+
+        reverse_proxy localhost:3923 {
+          flush_interval -1
+          transport http {
+            read_timeout 610m
+            write_timeout 610m
+            response_header_timeout 610m
+          }
+        }
+      '';
+    };
+    virtualHosts."http://mediabox.local" = {
+      extraConfig = ''
+        reverse_proxy localhost:8096
+
+        header {
+            Strict-Transport-Security "max-age=31536000; IncludeSubDomains"
+        }
+      '';
+    };
+    virtualHosts."http://zellij.mediabox.local" = {
+      extraConfig = ''
+        reverse_proxy localhost:9090
+      '';
+    };
+
+  };
+
+  /*let copyparty-src = builtins.fetchGit {
+    url = "https://github.com/9001/copyparty.git";
+    rev = "hovudstraum";
+  }; in 
+
+  services.copyparty = {
+    enable = true;
+    settings = {
+      accounts = {
+        aleks.passwordFile = "/etc/password-files/media-user.pwd";
+      };
+      volumes = {
+        "/" = {
+	  path = "/home/media/";
+	  access = {
+	    r = "*";
+	    rw = [ "aleks" ];
+	  };
+	};
+      };
+    };
+  };*/
+
+  services.jellyfin = {
+    enable = true;
+    openFirewall = true;
+    user = "media";
+  };
+
+  systemd.services.jellyfin.environment.LIBVA_DRIVER_NAME = "iHD";
+  environment.sessionVariables = {
+    LIBVA_DRIVER_NAME = "iHD";
+    LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib";
+  };
+  
+  hardware.graphics = {
+    enable = true;
+    extraPackages = with pkgs; [
+      intel-ocl # Generic OpenCL support
+
+      intel-media-driver
+
+      intel-compute-runtime
+
+      vpl-gpu-rt
+
+
+    ];
+  };
+}
+
