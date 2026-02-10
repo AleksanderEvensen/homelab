@@ -83,6 +83,7 @@ in
         443
         22
         445
+        adminPanelPort
       ];
       allowedUDPPorts = [
         443
@@ -188,7 +189,16 @@ in
         }
       '';
     };
-    virtualHosts."admin.server.ahse.no" = {
+    virtualHosts."jellyfin.homelab.ahse.no" = {
+      extraConfig = ''
+        reverse_proxy localhost:8096
+
+        header {
+          Strict-Transport-Security "max-age=31536000; IncludeSubDomains"
+        }
+      '';
+    };
+    virtualHosts."admin.homelab.ahse.no" = {
       extraConfig = ''
         reverse_proxy localhost:${toString adminPanelPort}
 
@@ -197,7 +207,7 @@ in
         }
       '';
     };
-    virtualHosts."cp.ahse.no" = {
+    virtualHosts."cp.homelab.ahse.no" = {
       extraConfig = ''
         request_body {
           max_size 1024MB
@@ -213,32 +223,6 @@ in
         }
       '';
     };
-    virtualHosts."http://mediabox.local" = {
-      extraConfig = ''
-        reverse_proxy localhost:8096
-
-        header {
-            Strict-Transport-Security "max-age=31536000; IncludeSubDomains"
-        }
-      '';
-    };
-
-    virtualHosts."http://admin.mediabox.local" = {
-      extraConfig = ''
-        reverse_proxy localhost:${toString adminPanelPort}
-
-        header {
-            Strict-Transport-Security "max-age=31536000; IncludeSubDomains"
-        }
-      '';
-    };
-
-    virtualHosts."http://zellij.mediabox.local" = {
-      extraConfig = ''
-        reverse_proxy localhost:9090
-      '';
-    };
-
   };
 
   /*
