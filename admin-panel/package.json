@@ -16,7 +16,8 @@
     "db:pull": "drizzle-kit pull",
     "db:studio": "drizzle-kit studio",
     "admin:create": "bun scripts/manage-admin.ts create",
-    "admin:change-password": "bun scripts/manage-admin.ts change-password"
+    "admin:change-password": "bun scripts/manage-admin.ts change-password",
+    "ci-build": "bun install --frozen-lockfile && bun run build"
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",

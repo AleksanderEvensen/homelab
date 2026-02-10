@@ -279,7 +279,7 @@ in
       Type = "oneshot";
       User = "media";
       WorkingDirectory = "/home/media/homelab/admin-panel";
-      ExecStart = "${pkgs.bun}/bin/bun run build";
+      ExecStart = "${pkgs.bun}/bin/bun run ci-build";
       ExecStartPost = "${pkgs.systemd}/bin/systemctl try-restart admin-panel.service";
     };
   };
