@@ -7,6 +7,11 @@
 
 let
   adminPanelPort = 3039;
+  unstable = import (builtins.fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz"
+  }) {
+    config.allowUnfree = true;
+  }
 in
 {
   imports = [
@@ -44,7 +49,7 @@ in
 
     wireguard-tools
 
-    bun
+    unstable.bun
 
   ];
 
