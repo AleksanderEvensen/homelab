@@ -1,6 +1,6 @@
 import type { Subprocess } from "bun";
 
-export type CommandType = "git-pull" | "nixos-rebuild";
+export type CommandType = "git-pull" | "nixos-rebuild" | "git-fetch";
 
 export interface CommandSession {
   id: string;
@@ -26,6 +26,7 @@ let activeSessionId: string | null = null;
 const TIMEOUTS: Record<CommandType, number> = {
   "git-pull": 60_000,
   "nixos-rebuild": 600_000,
+  "git-fetch": 30_000,
 };
 
 function getCommandArgs(command: CommandType, cwd: string): string[] {
@@ -34,6 +35,8 @@ function getCommandArgs(command: CommandType, cwd: string): string[] {
       return ["git", "-C", cwd, "pull"];
     case "nixos-rebuild":
       return ["sudo", "nixos-rebuild", "switch"];
+    case "git-fetch":
+      return ["git", "-C", cwd, "fetch"];
     default:
       throw new Error(`Unknown command: ${command}`);
   }
@@ -58,7 +61,10 @@ function emit(session: CommandSession, event: SSEEvent) {
   }
 }
 
-async function readStream(stream: ReadableStream<Uint8Array>, session: CommandSession) {
+async function readStream(
+  stream: ReadableStream<Uint8Array>,
+  session: CommandSession,
+) {
   const reader = stream.getReader();
   const decoder = new TextDecoder();
   try {
@@ -111,8 +117,12 @@ export function startCommand(command: CommandType, cwd: string): string {
   activeSessionId = id;
 
   // Read stdout and stderr concurrently
-  const stdoutPromise = proc.stdout ? readStream(proc.stdout, session) : Promise.resolve();
-  const stderrPromise = proc.stderr ? readStream(proc.stderr, session) : Promise.resolve();
+  const stdoutPromise = proc.stdout
+    ? readStream(proc.stdout, session)
+    : Promise.resolve();
+  const stderrPromise = proc.stderr
+    ? readStream(proc.stderr, session)
+    : Promise.resolve();
 
   // Set timeout
   const timeout = setTimeout(() => {
@@ -150,7 +160,10 @@ export function getSession(sessionId: string): CommandSession | undefined {
   return sessions.get(sessionId);
 }
 
-export function subscribe(sessionId: string, listener: (event: SSEEvent) => void): () => void {
+export function subscribe(
+  sessionId: string,
+  listener: (event: SSEEvent) => void,
+): () => void {
   const session = sessions.get(sessionId);
   if (!session) throw new Error("Session not found");
 

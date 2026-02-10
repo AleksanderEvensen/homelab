@@ -46,9 +46,11 @@ export default function GitStatusCard({ data }: { data: GitStatusData }) {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const stream = useCommandStream();
+  const stream2 = useCommandStream();
 
   const handleRefresh = async () => {
     setRefreshing(true);
+    await stream2.start("git-fetch");
     await router.invalidate();
     setRefreshing(false);
   };
@@ -66,8 +68,15 @@ export default function GitStatusCard({ data }: { data: GitStatusData }) {
         </CardTitle>
         <CardDescription>{data.repoPath}</CardDescription>
         <CardAction>
-          <Button variant="ghost" size="icon-sm" onClick={handleRefresh} disabled={refreshing}>
-            <RefreshCw className={`size-3.5 ${refreshing ? "animate-spin" : ""}`} />
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            <RefreshCw
+              className={`size-3.5 ${refreshing ? "animate-spin" : ""}`}
+            />
           </Button>
         </CardAction>
       </CardHeader>
@@ -98,7 +107,9 @@ export default function GitStatusCard({ data }: { data: GitStatusData }) {
             </Badge>
           )}
 
-          {data.behind === 0 && data.ahead === 0 && <Badge variant="secondary">up to date</Badge>}
+          {data.behind === 0 && data.ahead === 0 && (
+            <Badge variant="secondary">up to date</Badge>
+          )}
         </div>
 
         {/* Terminal output for pull command */}
@@ -110,6 +121,17 @@ export default function GitStatusCard({ data }: { data: GitStatusData }) {
               exitCode={stream.exitCode}
               duration={stream.duration}
               error={stream.error}
+            />
+          </div>
+        )}
+        {(stream2.lines.length > 0 || stream2.isRunning) && (
+          <div className="mt-4">
+            <TerminalOutput
+              lines={stream2.lines}
+              isRunning={stream2.isRunning}
+              exitCode={stream2.exitCode}
+              duration={stream2.duration}
+              error={stream2.error}
             />
           </div>
         )}
@@ -133,8 +155,10 @@ export default function GitStatusCard({ data }: { data: GitStatusData }) {
             <AlertDialogHeader>
               <AlertDialogTitle>Pull Changes</AlertDialogTitle>
               <AlertDialogDescription>
-                This will run <code className="text-xs bg-muted px-1 py-0.5">git pull</code> in{" "}
-                {data.repoPath}. If conflicts occur, the operation will stop and show the error.
+                This will run{" "}
+                <code className="text-xs bg-muted px-1 py-0.5">git pull</code>{" "}
+                in {data.repoPath}. If conflicts occur, the operation will stop
+                and show the error.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

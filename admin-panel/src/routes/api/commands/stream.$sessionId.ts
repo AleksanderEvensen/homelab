@@ -12,10 +12,12 @@ export const Route = createFileRoute("/api/commands/stream/$sessionId")({
         const session = getSession(sessionId);
 
         if (!session) {
-          return new Response(JSON.stringify({ error: "Session not found" }), {
-            status: 404,
-            headers: { "Content-Type": "application/json" },
-          });
+          return Response.json(
+            { error: "Session not found" },
+            {
+              status: 404,
+            },
+          );
         }
 
         const stream = new ReadableStream({
@@ -24,7 +26,9 @@ export const Route = createFileRoute("/api/commands/stream/$sessionId")({
 
             function send(event: SSEEvent) {
               try {
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+                controller.enqueue(
+                  encoder.encode(`data: ${JSON.stringify(event)}\n\n`),
+                );
                 if (event.type === "done" || event.type === "error") {
                   controller.close();
                 }

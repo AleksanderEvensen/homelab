@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 
-export type CommandType = "git-pull" | "nixos-rebuild";
+export type CommandType = "git-pull" | "nixos-rebuild" | "git-fetch";
 
 interface CommandStreamState {
   lines: string[];
