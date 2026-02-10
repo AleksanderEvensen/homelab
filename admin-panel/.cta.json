@@ -1,0 +1,18 @@
+{
+  "initialized": true,
+  "mode": "file-router",
+  "projectName": "my-app",
+  "typescript": true,
+  "tailwind": true,
+  "git": true,
+  "addOnOptions": {
+    "drizzle": {
+      "database": "sqlite"
+    }
+  },
+  "packageManager": "bun",
+  "install": true,
+  "version": 1,
+  "framework": "react-cra",
+  "chosenAddOns": ["compiler", "drizzle", "t3env", "better-auth", "start", "tanstack-query"]
+}
