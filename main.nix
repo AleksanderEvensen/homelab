@@ -7,19 +7,20 @@
 
 let
   adminPanelPort = 3039;
-  unstable = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz"
-  }) {
-    config.allowUnfree = true;
-  }
+  unstable =
+    import
+      (builtins.fetchTarball {
+        url = "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz";
+      })
+      {
+        config.allowUnfree = true;
+      };
 in
 {
   imports = [
     # ./caddy.nix
     # ./jelly-fin.nix
     # ./copyparty.nix
-    # ./vscode-server.nix
-    (fetchTarball "https://github.com/nix-community/nixos-vscode-server/tarball/master")
   ];
 
   programs.nix-ld.enable = true;
@@ -116,8 +117,6 @@ in
   };
 
   services.openssh.enable = true;
-
-  services.vscode-server.enable = true;
 
   services.openssh.settings = {
     PasswordAuthentication = true;
