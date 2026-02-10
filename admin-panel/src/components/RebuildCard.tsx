@@ -44,7 +44,7 @@ export default function RebuildCard() {
       </CardHeader>
 
       <CardContent>
-        {(stream.lines.length > 0 || stream.isRunning) && (
+        {stream.lines.length > 0 && (
           <TerminalOutput
             lines={stream.lines}
             isRunning={stream.isRunning}

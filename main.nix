@@ -296,9 +296,7 @@ in
     wantedBy = [ "multi-user.target" ];
     pathConfig = {
       PathChanged = [
-        "/home/media/homelab/admin-panel/src/db"
-        "/home/media/homelab/admin-panel/src/components"
-        "/home/media/homelab/admin-panel/src/routes"
+        "/home/media/homelab/admin-panel/src"
         "/home/media/homelab/admin-panel/package.json"
         "/home/media/homelab/admin-panel/bun.lock"
       ];
