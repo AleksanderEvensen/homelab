@@ -27,8 +27,8 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogFooter,
-  AlertDialogAction,
   AlertDialogCancel,
+  AlertDialogActionClose,
 } from "@/components/ui/alert-dialog";
 import TerminalOutput from "./TerminalOutput";
 import { useCommandStream } from "@/hooks/useCommandStream";
@@ -163,7 +163,9 @@ export default function GitStatusCard({ data }: { data: GitStatusData }) {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handlePull}>Pull</AlertDialogAction>
+              <AlertDialogActionClose onClick={handlePull}>
+                Pull
+              </AlertDialogActionClose>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

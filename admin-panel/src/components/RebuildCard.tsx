@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogFooter,
-  AlertDialogAction,
+  AlertDialogActionClose,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import TerminalOutput from "./TerminalOutput";
@@ -38,8 +38,11 @@ export default function RebuildCard() {
           NixOS Rebuild
         </CardTitle>
         <CardDescription>
-          Run <code className="text-xs bg-muted px-1 py-0.5">nixos-rebuild switch</code> to apply
-          configuration changes
+          Run{" "}
+          <code className="text-xs bg-muted px-1 py-0.5">
+            nixos-rebuild switch
+          </code>{" "}
+          to apply configuration changes
         </CardDescription>
       </CardHeader>
 
@@ -71,19 +74,21 @@ export default function RebuildCard() {
               <AlertDialogTitle>Rebuild NixOS</AlertDialogTitle>
               <AlertDialogDescription>
                 This will run{" "}
-                <code className="text-xs bg-muted px-1 py-0.5">sudo nixos-rebuild switch</code>.
-                Running services may restart and there could be brief downtime. Sudo password may be
-                required.
+                <code className="text-xs bg-muted px-1 py-0.5">
+                  sudo nixos-rebuild switch
+                </code>
+                . Running services may restart and there could be brief
+                downtime. Sudo password may be required.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
+              <AlertDialogActionClose
                 onClick={handleRebuild}
                 className="bg-destructive/10 text-destructive hover:bg-destructive/20"
               >
                 Rebuild
-              </AlertDialogAction>
+              </AlertDialogActionClose>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

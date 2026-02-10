@@ -29,14 +29,14 @@ const TIMEOUTS: Record<CommandType, number> = {
   "git-fetch": 30_000,
 };
 
-function getCommandArgs(command: CommandType, cwd: string): string[] {
+function getCommandArgs(command: CommandType): string[] {
   switch (command) {
     case "git-pull":
-      return ["git", "-C", cwd, "pull"];
+      return ["git", "pull"];
     case "nixos-rebuild":
       return ["sudo", "nixos-rebuild", "switch"];
     case "git-fetch":
-      return ["git", "-C", cwd, "fetch"];
+      return ["git", "fetch"];
     default:
       throw new Error(`Unknown command: ${command}`);
   }
@@ -94,10 +94,10 @@ export function startCommand(command: CommandType, cwd: string): string {
   }
 
   const id = crypto.randomUUID();
-  const args = getCommandArgs(command, cwd);
+  const args = getCommandArgs(command);
 
   const proc = Bun.spawn(args, {
-    cwd: command === "nixos-rebuild" ? cwd : undefined,
+    cwd: cwd,
     stdout: "pipe",
     stderr: "pipe",
     stdin: "pipe",
