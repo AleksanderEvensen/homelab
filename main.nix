@@ -188,6 +188,15 @@ in
         }
       '';
     };
+    virtualHosts."admin.server.ahse.no" = {
+      extraConfig = ''
+        reverse_proxy localhost:${toString adminPanelPort}
+
+        header {
+          Strict-Transport-Security "max-age=31536000; IncludeSubDomains"
+        }
+      '';
+    };
     virtualHosts."cp.ahse.no" = {
       extraConfig = ''
         request_body {
@@ -213,6 +222,17 @@ in
         }
       '';
     };
+
+    virtualHosts."http://admin.mediabox.local" = {
+      extraConfig = ''
+        reverse_proxy localhost:${toString adminPanelPort}
+
+        header {
+            Strict-Transport-Security "max-age=31536000; IncludeSubDomains"
+        }
+      '';
+    };
+
     virtualHosts."http://zellij.mediabox.local" = {
       extraConfig = ''
         reverse_proxy localhost:9090
