@@ -294,14 +294,13 @@ in
 
   systemd.services.admin-panel-build = {
     description = "Admin panel build";
-    wantedBy = [ "multi-user.target" ];
     serviceConfig = {
       Type = "oneshot";
-      PermissionsStartOnly = true;
+      RemainAfterExit = true;
       User = "media";
       WorkingDirectory = "/home/media/homelab/admin-panel";
       ExecStart = "${pkgs.bun}/bin/bun run ci-build";
-      ExecStartPost = "${pkgs.systemd}/bin/systemctl try-restart admin-panel.service";
+      ExecStartPost = "+${pkgs.systemd}/bin/systemctl try-restart admin-panel.service";
     };
   };
 
@@ -309,12 +308,15 @@ in
     wantedBy = [ "multi-user.target" ];
     pathConfig = {
       PathChanged = [
-        "/home/media/homelab/admin-panel/src"
+        "/home/media/homelab/admin-panel/src/db"
+        "/home/media/homelab/admin-panel/src/components"
+        "/home/media/homelab/admin-panel/src/routes"
         "/home/media/homelab/admin-panel/package.json"
         "/home/media/homelab/admin-panel/bun.lock"
-        "/home/media/homelab/admin-panel/vite.config.ts"
       ];
     };
+    TriggerLimitIntervalSec = "10s"; # Prevent rapid-fire rebuilds
+    TriggerLimitBurst = 1;
   };
 
   systemd.services.admin-panel = {
@@ -328,6 +330,7 @@ in
 
     environment = {
       PORT = toString adminPanelPort;
+      NODE_ENV = "production";
     };
 
     serviceConfig = {
@@ -338,6 +341,8 @@ in
       ExecStart = "${pkgs.bun}/bin/bun run .output/server/index.mjs";
       Restart = "on-failure";
       RestartSec = 5;
+      TimeoutStopSec = "30s";
+      KillSignal = "SIGINT";
     };
   };
 }
