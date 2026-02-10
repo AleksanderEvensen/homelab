@@ -1,5 +1,13 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
+let
+  adminPanelPort = 3039;
+in
 {
   imports = [
     # ./caddy.nix
@@ -36,7 +44,7 @@
 
     wireguard-tools
 
-    zellij
+    bun
 
   ];
 
@@ -50,7 +58,12 @@
   users.users.media = {
     isNormalUser = true;
     description = "media";
-    extraGroups = [ "wheel" "networkmanager" "video" "render" ];
+    extraGroups = [
+      "wheel"
+      "networkmanager"
+      "video"
+      "render"
+    ];
     hashedPasswordFile = "/etc/password-files/media-user.pwd";
 
     openssh = {
@@ -63,10 +76,18 @@
   networking = {
     networkmanager.enable = true;
     hostName = "mediabox";
-    
+
     firewall = {
-      allowedTCPPorts = [ 80 443 22 445 ];
-      allowedUDPPorts = [ 443 5353 ];
+      allowedTCPPorts = [
+        80
+        443
+        22
+        445
+      ];
+      allowedUDPPorts = [
+        443
+        5353
+      ];
       trustedInterfaces = [ "wg0" ];
 
     };
@@ -79,15 +100,14 @@
       peers = [
         {
           publicKey = "HhQuvJiUmoL2Oz939m51R80Zah2ua6KNHfm/j0VxOxg=";
-	  endpoint = "147.93.127.164:51820";
-	  allowedIPs = [ "10.100.0.1/32" ];
+          endpoint = "147.93.127.164:51820";
+          allowedIPs = [ "10.100.0.1/32" ];
 
-	  persistentKeepalive = 25;
+          persistentKeepalive = 25;
         }
       ];
     };
   };
-
 
   services.openssh.enable = true;
 
@@ -95,7 +115,10 @@
 
   services.openssh.settings = {
     PasswordAuthentication = true;
-    AllowUsers = [ "root" "media" ];
+    AllowUsers = [
+      "root"
+      "media"
+    ];
     PermitRootLogin = "yes";
   };
 
@@ -104,9 +127,9 @@
     enable = true;
     nssmdns4 = true;
     publish = {
-	enable = true;
-	addresses = true;
-	workstation = true;
+      enable = true;
+      addresses = true;
+      workstation = true;
     };
   };
 
@@ -147,7 +170,6 @@
       };
     };
   };
-
 
   services.caddy = {
     enable = true;
@@ -199,28 +221,30 @@
 
   };
 
-  /*let copyparty-src = builtins.fetchGit {
-    url = "https://github.com/9001/copyparty.git";
-    rev = "hovudstraum";
-  }; in 
+  /*
+    let copyparty-src = builtins.fetchGit {
+        url = "https://github.com/9001/copyparty.git";
+        rev = "hovudstraum";
+      }; in
 
-  services.copyparty = {
-    enable = true;
-    settings = {
-      accounts = {
-        aleks.passwordFile = "/etc/password-files/media-user.pwd";
+      services.copyparty = {
+        enable = true;
+        settings = {
+          accounts = {
+            aleks.passwordFile = "/etc/password-files/media-user.pwd";
+          };
+          volumes = {
+            "/" = {
+    	  path = "/home/media/";
+    	  access = {
+    	    r = "*";
+    	    rw = [ "aleks" ];
+    	  };
+    	};
+          };
+        };
       };
-      volumes = {
-        "/" = {
-	  path = "/home/media/";
-	  access = {
-	    r = "*";
-	    rw = [ "aleks" ];
-	  };
-	};
-      };
-    };
-  };*/
+  */
 
   services.jellyfin = {
     enable = true;
@@ -233,7 +257,7 @@
     LIBVA_DRIVER_NAME = "iHD";
     LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib";
   };
-  
+
   hardware.graphics = {
     enable = true;
     extraPackages = with pkgs; [
@@ -245,8 +269,54 @@
 
       vpl-gpu-rt
 
-
     ];
   };
-}
 
+  systemd.services.admin-panel-build = {
+    description = "Admin panel build";
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      User = "media";
+      WorkingDirectory = "/home/media/homelab/admin-panel";
+      ExecStart = "${pkgs.bun}/bin/bun run build";
+      ExecStartPost = "${pkgs.systemd}/bin/systemctl try-restart admin-panel.service";
+    };
+  };
+
+  systemd.paths.admin-panel-build = {
+    wantedBy = [ "multi-user.target" ];
+    pathConfig = {
+      PathChanged = [
+        "/home/media/homelab/admin-panel/src"
+        "/home/media/homelab/admin-panel/package.json"
+        "/home/media/homelab/admin-panel/bun.lock"
+        "/home/media/homelab/admin-panel/vite.config.ts"
+      ];
+    };
+  };
+
+  systemd.services.admin-panel = {
+    description = "Admin panel";
+    after = [
+      "network.target"
+      "admin-panel-build.service"
+    ];
+    requires = [ "admin-panel-build.service" ];
+    wantedBy = [ "multi-user.target" ];
+
+    environment = {
+      PORT = toString adminPanelPort;
+    };
+
+    serviceConfig = {
+      Type = "simple";
+      User = "media";
+      WorkingDirectory = "/home/media/homelab/admin-panel";
+      ConditionPathExists = "/home/media/homelab/admin-panel/.output";
+      ExecStart = "${pkgs.bun}/bin/bun run .output/server/index.mjs";
+      Restart = "on-failure";
+      RestartSec = 5;
+    };
+  };
+}
