@@ -305,36 +305,60 @@ in
     };
   };
 
-  systemd.services.admin-panel = {
+  systemd.user.services.admin-panel = {
     description = "Admin panel";
-    after = [
-      "network.target"
-      "admin-panel-build.service"
-    ];
-    requires = [ "admin-panel-build.service" ];
-    wantedBy = [ "multi-user.target" ];
 
-    path = [
-      unstable.bun
-      pkgs.git
-    ];
+    # Note: user services usually want 'default.target' instead of 'multi-user.target'
+    wantedBy = [ "default.target" ];
 
+    # You still want to define specific dependencies for the build
+    # but 'network.target' is often implicit or managed via 'network-online.target'
+    after = [ "admin-panel-build.service" ];
     environment = {
       PORT = toString adminPanelPort;
       NODE_ENV = "production";
       HOMELAB_REPO_PATH = "/home/media/homelab";
     };
 
+    # Note: No 'User' or 'Group' needed here!
     serviceConfig = {
       Type = "simple";
-      User = "media";
       WorkingDirectory = "/home/media/homelab/admin-panel";
-      ConditionPathExists = "/home/media/homelab/admin-panel/.output";
       ExecStart = "${unstable.bun}/bin/bun run .output/server/index.mjs";
       Restart = "on-failure";
-      RestartSec = 5;
-      TimeoutStopSec = "30s";
-      KillSignal = "SIGINT";
     };
   };
+
+  # systemd.services.admin-panel = {
+  #   description = "Admin panel";
+  #   after = [
+  #     "network.target"
+  #     "admin-panel-build.service"
+  #   ];
+  #   requires = [ "admin-panel-build.service" ];
+  #   wantedBy = [ "multi-user.target" ];
+
+  #   path = [
+  #     unstable.bun
+  #     pkgs.git
+  #   ];
+
+  #   environment = {
+  #     PORT = toString adminPanelPort;
+  #     NODE_ENV = "production";
+  #     HOMELAB_REPO_PATH = "/home/media/homelab";
+  #   };
+
+  #   serviceConfig = {
+  #     Type = "simple";
+  #     User = "media";
+  #     WorkingDirectory = "/home/media/homelab/admin-panel";
+  #     ConditionPathExists = "/home/media/homelab/admin-panel/.output";
+  #     ExecStart = "${unstable.bun}/bin/bun run .output/server/index.mjs";
+  #     Restart = "on-failure";
+  #     RestartSec = 5;
+  #     TimeoutStopSec = "30s";
+  #     KillSignal = "SIGINT";
+  #   };
+  # };
 }
