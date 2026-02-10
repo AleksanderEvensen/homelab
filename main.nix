@@ -287,7 +287,7 @@ in
       RemainAfterExit = true;
       User = "media";
       WorkingDirectory = "/home/media/homelab/admin-panel";
-      ExecStart = "${pkgs.bun}/bin/bun run ci-build";
+      ExecStart = "${unstable.bun}/bin/bun run ci-build";
       ExecStartPost = "+${pkgs.systemd}/bin/systemctl try-restart admin-panel.service";
     };
   };
@@ -316,9 +316,15 @@ in
     requires = [ "admin-panel-build.service" ];
     wantedBy = [ "multi-user.target" ];
 
+    path = [
+      unstable.bun
+      pkgs.git
+    ];
+
     environment = {
       PORT = toString adminPanelPort;
       NODE_ENV = "production";
+      HOMELAB_REPO_PATH = "/home/media/homelab";
     };
 
     serviceConfig = {
@@ -326,7 +332,7 @@ in
       User = "media";
       WorkingDirectory = "/home/media/homelab/admin-panel";
       ConditionPathExists = "/home/media/homelab/admin-panel/.output";
-      ExecStart = "${pkgs.bun}/bin/bun run .output/server/index.mjs";
+      ExecStart = "${unstable.bun}/bin/bun run .output/server/index.mjs";
       Restart = "on-failure";
       RestartSec = 5;
       TimeoutStopSec = "30s";
