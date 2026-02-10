@@ -338,6 +338,7 @@ in
         "HOME=/home/media"
         "USER=media"
         "PATH=/run/current-system/sw/bin:/run/current-system/sw/sbin"
+        "GIT_SSH_COMMAND='ssh -F /home/media/.ssh/config'"
       ];
 
       ExecStart = "${pkgs.bash}/bin/bash -l -c '${unstable.bun}/bin/bun run .output/server/index.mjs'";

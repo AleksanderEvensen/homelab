@@ -34,7 +34,7 @@ function getCommandArgs(command: CommandType): string[] {
     case "git-pull":
       return ["git", "pull"];
     case "nixos-rebuild":
-      return ["sudo", "nixos-rebuild", "switch"];
+      return ["sudo", "-S", "nixos-rebuild", "switch"];
     case "git-fetch":
       return ["git", "fetch"];
     default:
