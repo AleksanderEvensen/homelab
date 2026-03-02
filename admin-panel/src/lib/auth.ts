@@ -12,4 +12,5 @@ export const auth = betterAuth({
     enabled: true,
   },
   plugins: [tanstackStartCookies(), username()],
+  trustedOrigins: ["http://localhost:**", "https://**.ahse.no"],
 });

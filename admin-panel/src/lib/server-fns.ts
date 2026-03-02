@@ -80,7 +80,18 @@ export interface TreeEntry {
   children?: TreeEntry[];
 }
 
-const IGNORED = new Set([".git", "node_modules", ".direnv", "result", ".devenv"]);
+const IGNORED = new Set([
+  ".git",
+  "node_modules",
+  ".output",
+  "dist",
+  "bun.lock",
+  ".direnv",
+  "result",
+  ".devenv",
+  ".env.local",
+  ".env",
+]);
 
 async function readDir(dirPath: string, basePath: string): Promise<TreeEntry[]> {
   const { readdirSync, statSync } = await import("node:fs");
